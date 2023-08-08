@@ -1,5 +1,11 @@
+const { customAlphabet } = require('nanoid');
 const mongoose = require("mongoose");
+
 const { Schema } = mongoose;
+
+// Function to generate a random string of length 10
+const generateRandomString = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 10);
+
 
 // Enum for Order statuses
 const OrderStatusEnum = Object.freeze({
@@ -26,7 +32,7 @@ const orderSchema = new Schema(
         recipientAddressDescription: { type: String, required: true },
         expectedDeliveryDate: { type: Date },
         note: { type: String },
-        orderNumber: { type: String, unique: true, required: true },
+        orderNumber: { type: String, unique: true },
         uid: { type: String, required: true },
         timestamp: { type: Date, default: Date.now },
         status: {
@@ -37,6 +43,36 @@ const orderSchema = new Schema(
     },
     { timestamps: true } // This will automatically add createdAt and updatedAt fields
 );
+// Pre-save hook to generate orderNumber before saving a new order
+orderSchema.pre('save', async function (next) {
+    if (!this.orderNumber) {
+        let isUnique = false;
+        while (!isUnique) {
+            const potentialOrderNumber = generateRandomString();
+            const existingOrder = await mongoose.model('Order').findOne({ orderNumber: potentialOrderNumber });
+            if (!existingOrder) {
+                this.orderNumber = potentialOrderNumber;
+                isUnique = true;
+            }
+        }
+    }
+    next();
+});
+orderSchema.index({
+    senderName: 'text',
+    senderPhone: 'text',
+    senderAddressProvince: 'text',
+    senderAddressDistrict: 'text',
+    senderAddressWard: 'text',
+    senderAddressDescription: 'text',
+    recipientName: 'text',
+    recipientPhone: 'text',
+    recipientAddressProvince: 'text',
+    recipientAddressDistrict: 'text',
+    recipientAddressWard: 'text',
+    recipientAddressDescription: 'text',
+    // ... Add other fields you want to search
+});
 
 const OrderModel = mongoose.model("Order", orderSchema);
 
