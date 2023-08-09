@@ -17,7 +17,7 @@ const UserController = {
                 uid: userId,
             });
             if (existingUser) {
-                user = await User.findOneAndUpdate(
+                user = await UserModel.findOneAndUpdate(
                     { uid: userId },
                     {
                         name,
@@ -40,8 +40,11 @@ const UserController = {
                 await user.save();
             }
             res.status(201).json({
-                user,
-                message: "Save user successfully",
+                name,
+                addressProvince,
+                addressDistrict,
+                addressWard,
+                addressDescription,
             });
         } catch (error) {
             throw new Error(error.message);
