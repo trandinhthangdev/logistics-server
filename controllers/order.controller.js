@@ -3,12 +3,14 @@ const OrderModel = require("./../models/order.model");
 const OrderController = {
     getAllOrders: async (req, res) => {
         try {
-            const { page = 1, limit = 10, search = '' } = req.query;
+            const { page = 1, limit = 10, search = "" } = req.query;
             const userId = req.user?.user_id ?? null;
-            const query = search ? {
-                uid: userId,
-                $text: { $search: search}
-            } : {uid: userId};
+            const query = search
+                ? {
+                      uid: userId,
+                      $text: { $search: search },
+                  }
+                : { uid: userId };
             const orders = await OrderModel.find(query)
                 .skip((parseInt(page) - 1) * parseInt(limit))
                 .limit(parseInt(limit));
@@ -26,7 +28,7 @@ const OrderController = {
         // });
 
         try {
-            console.log(req.body)
+            console.log(req.body);
             const {
                 senderName,
                 senderPhone,
@@ -77,15 +79,15 @@ const OrderController = {
             const order = await OrderModel.findOne({ orderNumber });
 
             if (!order) {
-                return res.status(404).json({ error: 'Order not found' });
+                return res.status(404).json({ error: "Order not found" });
             }
 
             return res.status(200).json(order);
         } catch (err) {
-            console.error('Error fetching order:', err);
-            return res.status(500).json({ error: 'Server error' });
+            console.error("Error fetching order:", err);
+            return res.status(500).json({ error: "Server error" });
         }
-    }
+    },
     // Add other controller functions for updating and deleting orders
 };
 
