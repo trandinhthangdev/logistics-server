@@ -1,16 +1,28 @@
+const { stat } = require("fs");
+const httpStatus = require("../utils/httpStatus");
 const OrderModel = require("./../models/order.model");
 
 const OrderController = {
     getAllOrders: async (req, res) => {
         try {
-            const { page = 1, limit = 10, search = "" } = req.query;
+            const {
+                page = 1,
+                limit = 10,
+                search = "",
+                status = undefined,
+            } = req.query;
+            console.log("status", status);
             const userId = req.user?.user_id ?? null;
-            const query = search
-                ? {
-                      uid: userId,
-                      $text: { $search: search },
-                  }
-                : { uid: userId };
+            const isAdmin = !!req.user?.email;
+            const query = {
+                ...(isAdmin ? {} : { uid: userId }),
+                ...(search
+                    ? {
+                          $text: { $search: search },
+                      }
+                    : {}),
+                ...(status ? { status: status } : {}),
+            };
             const orders = await OrderModel.find(query)
                 .skip((parseInt(page) - 1) * parseInt(limit))
                 .limit(parseInt(limit));
@@ -65,8 +77,8 @@ const OrderController = {
                 note,
                 uid: req.user?.user_id ?? null,
             });
-            await newOrder.save();
-            res.status(201).json({ message: "Order created successfully" });
+            const data = await newOrder.save();
+            res.status(201).json(data);
         } catch (err) {
             console.log("err", err);
             res.status(500).json({ error: "Error creating the order" });
@@ -87,6 +99,24 @@ const OrderController = {
             console.error("Error fetching order:", err);
             return res.status(500).json({ error: "Server error" });
         }
+    },
+    changeOrderStatus: async (req, res) => {
+        const { orderNumber } = req.params;
+
+        const { status } = req.body;
+        const isAdmin = !!req.user?.email;
+        if (!isAdmin) {
+            res.status(httpStatus.FORBIDDEN).json({
+                error: "Error creating the order",
+            });
+        }
+        const order = await OrderModel.findOneAndUpdate(
+            { orderNumber },
+            {
+                status: status,
+            }
+        );
+        res.status(201).json(order);
     },
     // Add other controller functions for updating and deleting orders
 };

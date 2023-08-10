@@ -1,6 +1,29 @@
 const UserModel = require("../models/user.model");
 
 const UserController = {
+    getUsers: async (req, res) => {
+        try {
+            const { page = 1, limit = 10, search = "" } = req.query;
+            const userId = req.user?.user_id ?? null;
+            console.log("req.user", req.user);
+            const query = search
+                ? {
+                      //   uid: userId,
+                      $text: { $search: search },
+                  }
+                : {
+                      //   uid: userId,
+                  };
+            const users = await UserModel.find(query)
+                .skip((parseInt(page) - 1) * parseInt(limit))
+                .limit(parseInt(limit));
+            res.status(200).json(users);
+        } catch (err) {
+            res.status(500).json({
+                error: "Error fetching orders from the database",
+            });
+        }
+    },
     saveMe: async (req, res) => {
         try {
             const userId = req.user?.user_id ?? null;

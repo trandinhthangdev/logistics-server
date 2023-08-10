@@ -4,6 +4,7 @@ const { asyncWrapper } = require("../utils/asyncWrapper");
 const authMiddleware = require("../middlewares/auth.middleware");
 
 const router = express.Router();
+router.get("/", authMiddleware(), asyncWrapper(UserController.getUsers));
 
 router.get("/get-me", authMiddleware(), asyncWrapper(UserController.getMe));
 
