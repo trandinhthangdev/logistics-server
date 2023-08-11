@@ -1,4 +1,4 @@
-const whitelist = [undefined, "http://localhost:3000", "http://localhost:3001"];
+const whitelist = [undefined, "http://localhost:3000", "http://localhost:3001", "https://logistics.trandinhthangdev.com"];
 const corsOptions = {
     credentials: true,
     origin(origin, callback) {
