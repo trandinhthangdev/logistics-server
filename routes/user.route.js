@@ -5,7 +5,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 
 const router = express.Router();
 router.get("/", authMiddleware(), asyncWrapper(UserController.getUsers));
-router.get("/:uid", authMiddleware(), asyncWrapper(UserController.getUser));
+router.get("/get-user/:uid", authMiddleware(), asyncWrapper(UserController.getUser));
 
 router.get("/get-me", authMiddleware(), asyncWrapper(UserController.getMe));
 
