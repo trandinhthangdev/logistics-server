@@ -107,7 +107,7 @@ const OrderController = {
         const isAdmin = !!req.user?.email;
         if (!isAdmin) {
             res.status(httpStatus.FORBIDDEN).json({
-                error: "Error creating the order",
+                error: "FORBIDDEN",
             });
         }
         const order = await OrderModel.findOneAndUpdate(

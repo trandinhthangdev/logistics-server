@@ -1,5 +1,6 @@
 const { customAlphabet } = require('nanoid');
 const mongoose = require("mongoose");
+const {OrderStatusEnum} = require("../utils/constants");
 
 const { Schema } = mongoose;
 
@@ -7,13 +8,6 @@ const { Schema } = mongoose;
 const generateRandomString = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 10);
 
 
-// Enum for Order statuses
-const OrderStatusEnum = Object.freeze({
-    PENDING: "PENDING",
-    SHIPPED: "SHIPPED",
-    DELIVERED: "DELIVERED",
-    CANCELLED: "CANCELLED",
-});
 
 const orderSchema = new Schema(
     {

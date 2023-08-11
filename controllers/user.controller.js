@@ -1,4 +1,6 @@
 const UserModel = require("../models/user.model");
+const OrderModel = require("../models/order.model");
+const httpStatus = require("../utils/httpStatus");
 
 const UserController = {
     getUsers: async (req, res) => {
@@ -22,6 +24,28 @@ const UserController = {
             res.status(500).json({
                 error: "Error fetching orders from the database",
             });
+        }
+    },
+    getUser: async (req, res) => {
+        const { uid } = req.params;
+
+        try {
+            const isAdmin = !!req.user?.email;
+            if (!isAdmin) {
+                res.status(httpStatus.FORBIDDEN).json({
+                    error: "FORBIDDEN",
+                });
+            }
+            const user = await UserModel.findOne({ uid: uid });
+
+            if (!user) {
+                return res.status(404).json({ error: "Order not found" });
+            }
+
+            return res.status(200).json(user);
+        } catch (err) {
+            console.error("Error fetching order:", err);
+            return res.status(500).json({ error: "Server error" });
         }
     },
     saveMe: async (req, res) => {
