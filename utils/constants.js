@@ -5,6 +5,8 @@ const OrderStatusEnum = Object.freeze({
     DELIVERED: "DELIVERED",
     CANCELLED: "CANCELLED",
 });
+const MONGODB_URI = 'mongodb+srv://tonytran99no1:thang08021999@cluster0.obsqoff.mongodb.net/'
 module.exports = {
-    OrderStatusEnum
+    OrderStatusEnum,
+    MONGODB_URI
 }

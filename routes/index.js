@@ -10,5 +10,5 @@ apiRoutes.use("/api/orders", orderRoutes);
 apiRoutes.use("/api/addressvn", addressvnRoutes);
 apiRoutes.use("/api/app", appRoutes);
 
-apiRoutes.get("/", (req, res) => res.json({ api: "is-working" }));
+apiRoutes.get("/", (req, res) => res.json({ message: "Hello, I'm a logistics api." }));
 module.exports = apiRoutes;

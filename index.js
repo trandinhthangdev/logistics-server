@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const route = require("./routes");
 const { corsOptions } = require("./utils/cors");
+const {MONGODB_URI} = require("./utils/constants");
 const app = express();
 
 // Middleware
@@ -13,8 +14,7 @@ app.use(bodyParser.json());
 app.use(cors(corsOptions));
 
 // Connect to MongoDB
-const mongoDBUri =
-    "mongodb+srv://tonytran99no1:thang08021999@cluster0.obsqoff.mongodb.net/"; // Replace 'mydatabase' with your database name
+const mongoDBUri = MONGODB_URI; // Replace 'mydatabase' with your database name
 mongoose.connect(mongoDBUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
