@@ -1,6 +1,7 @@
 const { stat } = require("fs");
 const httpStatus = require("../utils/httpStatus");
 const OrderModel = require("./../models/order.model");
+const {OrderStatusEnum} = require("../utils/constants");
 
 const OrderController = {
     getAllOrders: async (req, res) => {
@@ -110,15 +111,59 @@ const OrderController = {
                 error: "FORBIDDEN",
             });
         }
-        const order = await OrderModel.findOneAndUpdate(
-            { orderNumber },
-            {
-                status: status,
-            }
-        );
-        res.status(201).json(order);
+        const orderExist = await OrderModel.findOne({
+            orderNumber
+        })
+        if (!orderExist) {
+            return res.status(404).json({ error: "Order not found" });
+        }
+        // check condition change status
+        let dataUpdate = {}
+        switch (orderExist.status) {
+            case OrderStatusEnum.PENDING:
+                if (status === OrderStatusEnum.SHIPPED) {
+                    dataUpdate = {
+                        status: status,
+                        shippingDate: new Date()
+                    }
+                } else if (status === OrderStatusEnum.CANCELLED) {
+                    dataUpdate = {
+                        status: status
+                    }
+                }
+                break;
+            case OrderStatusEnum.SHIPPED:
+                if (status === OrderStatusEnum.DELIVERED) {
+                    dataUpdate = {
+                        status: status,
+                        deliveryDate: new Date()
+                    }
+                } else if (status === OrderStatusEnum.CANCELLED) {
+                    dataUpdate = {
+                        status: status
+                    }
+                }
+                break;
+            case OrderStatusEnum.DELIVERED:
+               if (status === OrderStatusEnum.CANCELLED) {
+                    dataUpdate = {
+                        status: status
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        if (Object.keys(dataUpdate).length > 0) {
+            const order = await OrderModel.findOneAndUpdate(
+                {orderNumber},
+                {...dataUpdate}
+            );
+            res.status(201).json(order);
+        } else {
+            return res.status(400).json({ error: "Status has not been changed" });
+        }
     },
-    // Add other controller functions for updating and deleting orders
 };
 
 module.exports = OrderController;

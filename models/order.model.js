@@ -24,6 +24,7 @@ const orderSchema = new Schema(
         recipientAddressDistrict: { type: String, required: true },
         recipientAddressWard: { type: String, required: true },
         recipientAddressDescription: { type: String, required: true },
+        deliveryDate: { type: Date },
         expectedDeliveryDate: { type: Date },
         note: { type: String },
         orderNumber: { type: String, unique: true },
