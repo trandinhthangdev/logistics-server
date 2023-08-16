@@ -7,7 +7,13 @@ const UserController = {
         try {
             const { page = 1, limit = 10, search = "" } = req.query;
             const userId = req.user?.user_id ?? null;
-            console.log("req.user", req.user);
+
+            const isAdmin = !!req.user?.email;
+            if (!isAdmin) {
+                res.status(httpStatus.FORBIDDEN).json({
+                    message: "FORBIDDEN",
+                });
+            }
             const query = search
                 ? {
                       //   uid: userId,
@@ -21,8 +27,8 @@ const UserController = {
                 .limit(parseInt(limit));
             res.status(200).json(users);
         } catch (err) {
-            res.status(500).json({
-                error: "Error fetching orders from the database",
+            res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+                message: "Error fetching orders from the database",
             });
         }
     },
@@ -33,19 +39,18 @@ const UserController = {
             const isAdmin = !!req.user?.email;
             if (!isAdmin) {
                 res.status(httpStatus.FORBIDDEN).json({
-                    error: "FORBIDDEN",
+                    message: "FORBIDDEN",
                 });
             }
             const user = await UserModel.findOne({ uid: uid });
 
             if (!user) {
-                return res.status(404).json({ error: "Order not found" });
+                return res.status(httpStatus.NOT_FOUND).json({ message: "Order not found" });
             }
 
-            return res.status(200).json(user);
-        } catch (err) {
-            console.error("Error fetching order:", err);
-            return res.status(500).json({ error: "Server error" });
+            return res.status(httpStatus.OK).json(user);
+        } catch (error) {
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message ?? "Server error" });
         }
     },
     saveMe: async (req, res) => {
@@ -86,7 +91,7 @@ const UserController = {
                 });
                 await user.save();
             }
-            res.status(201).json({
+            res.status(httpStatus.OK).json({
                 name,
                 addressProvince,
                 addressDistrict,
@@ -94,7 +99,7 @@ const UserController = {
                 addressDescription,
             });
         } catch (error) {
-            throw new Error(error.message);
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message ?? "Server error" });
         }
     },
     getMe: async (req, res) => {
@@ -105,11 +110,11 @@ const UserController = {
                 uid: userId,
             });
             if (!user) {
-                return res.status(404).json({ error: "User not found" });
+                return res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
             }
-            return res.status(200).json(user);
+            return res.status(httpStatus.OK).json(user);
         } catch (error) {
-            throw new Error(error.message);
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message ?? "Server error" });
         }
     },
 };

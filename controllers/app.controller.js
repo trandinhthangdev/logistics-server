@@ -9,7 +9,7 @@ const AppController = {
             const isAdmin = !!req.user?.email;
             if (!isAdmin) {
                 res.status(httpStatus.FORBIDDEN).json({
-                    error: "FORBIDDEN",
+                    message: "forbidden",
                 });
             }
 
@@ -36,7 +36,9 @@ const AppController = {
                 }
             });
         } catch (error) {
-            throw new Error(error.message);
+            res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+                message: error.message,
+            });
         }
     },
 };

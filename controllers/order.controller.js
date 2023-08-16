@@ -13,7 +13,6 @@ const OrderController = {
                 status = undefined,
                 review = undefined
             } = req.query;
-            console.log('review', review)
 
             const userId = req.user?.user_id ?? null;
             const isAdmin = !!req.user?.email;
@@ -31,22 +30,15 @@ const OrderController = {
                 .skip((parseInt(page) - 1) * parseInt(limit))
                 .limit(parseInt(limit))
                 .sort({ createdAt: -1 });
-            res.status(200).json(orders);
+            res.status(httpStatus.OK).json(orders);
         } catch (err) {
-            console.log("err", err);
-            res.status(500).json({
-                error: "Error fetching orders from the database",
+            res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+                message: "Error fetching orders from the database",
             });
         }
     },
     createOrder: async (req, res) => {
-        // console.log(req.user.user_id);
-        // res.status(201).json({
-        //     message: "Order created successfully",
-        // });
-
         try {
-            console.log(req.body);
             const {
                 senderName,
                 senderPhone,
@@ -84,10 +76,9 @@ const OrderController = {
                 uid: req.user?.user_id ?? null,
             });
             const data = await newOrder.save();
-            res.status(201).json(data);
+            res.status(httpStatus.OK).json(data);
         } catch (err) {
-            console.log("err", err);
-            res.status(500).json({ error: "Error creating the order" });
+            res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Error creating the order" });
         }
     },
     getOrder: async (req, res) => {
@@ -97,105 +88,110 @@ const OrderController = {
             const order = await OrderModel.findOne({ orderNumber });
 
             if (!order) {
-                return res.status(404).json({ error: "Order not found" });
+                return res.status(httpStatus.NOT_FOUND).json({ message: "Order not found" });
             }
 
-            return res.status(200).json(order);
+            return res.status(httpStatus.OK).json(order);
         } catch (err) {
-            console.error("Error fetching order:", err);
-            return res.status(500).json({ error: "Server error" });
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
         }
     },
     changeOrderStatus: async (req, res) => {
-        const { orderNumber } = req.params;
-
-        const { status } = req.body;
-        const isAdmin = !!req.user?.email;
-        if (!isAdmin) {
-            res.status(httpStatus.FORBIDDEN).json({
-                error: "FORBIDDEN",
+        try {
+            const { orderNumber } = req.params;
+            const { status } = req.body;
+            const isAdmin = !!req.user?.email;
+            if (!isAdmin) {
+                res.status(httpStatus.FORBIDDEN).json({
+                    message: "forbidden",
+                });
+            }
+            const orderExist = await OrderModel.findOne({
+                orderNumber,
             });
-        }
-        const orderExist = await OrderModel.findOne({
-            orderNumber,
-        });
-        if (!orderExist) {
-            return res.status(404).json({ error: "Order not found" });
-        }
-        // check condition change status
-        let dataUpdate = {};
-        switch (orderExist.status) {
-            case OrderStatusEnum.PENDING:
-                if (status === OrderStatusEnum.SHIPPED) {
-                    dataUpdate = {
-                        status: status,
-                        shippingDate: new Date(),
-                    };
-                } else if (status === OrderStatusEnum.CANCELLED) {
-                    dataUpdate = {
-                        status: status,
-                    };
-                }
-                break;
-            case OrderStatusEnum.SHIPPED:
-                if (status === OrderStatusEnum.DELIVERED) {
-                    dataUpdate = {
-                        status: status,
-                        deliveryDate: new Date(),
-                    };
-                } else if (status === OrderStatusEnum.CANCELLED) {
-                    dataUpdate = {
-                        status: status,
-                    };
-                }
-                break;
-            case OrderStatusEnum.DELIVERED:
-                if (status === OrderStatusEnum.CANCELLED) {
-                    dataUpdate = {
-                        status: status,
-                    };
-                }
-                break;
-            default:
-                break;
-        }
-        if (Object.keys(dataUpdate).length > 0) {
-            const order = await OrderModel.findOneAndUpdate(
-                { orderNumber },
-                { ...dataUpdate }
-            );
-            res.status(201).json(order);
-        } else {
-            return res
-                .status(400)
-                .json({ error: "Status has not been changed" });
+            if (!orderExist) {
+                return res.status(httpStatus.NOT_FOUND).json({ message: "Order not found" });
+            }
+            let dataUpdate = {};
+            switch (orderExist.status) {
+                case OrderStatusEnum.PENDING:
+                    if (status === OrderStatusEnum.SHIPPED) {
+                        dataUpdate = {
+                            status: status,
+                            shippingDate: new Date(),
+                        };
+                    } else if (status === OrderStatusEnum.CANCELLED) {
+                        dataUpdate = {
+                            status: status,
+                        };
+                    }
+                    break;
+                case OrderStatusEnum.SHIPPED:
+                    if (status === OrderStatusEnum.DELIVERED) {
+                        dataUpdate = {
+                            status: status,
+                            deliveryDate: new Date(),
+                        };
+                    } else if (status === OrderStatusEnum.CANCELLED) {
+                        dataUpdate = {
+                            status: status,
+                        };
+                    }
+                    break;
+                case OrderStatusEnum.DELIVERED:
+                    if (status === OrderStatusEnum.CANCELLED) {
+                        dataUpdate = {
+                            status: status,
+                        };
+                    }
+                    break;
+                default:
+                    break;
+            }
+            if (Object.keys(dataUpdate).length > 0) {
+                const order = await OrderModel.findOneAndUpdate(
+                    { orderNumber },
+                    { ...dataUpdate }
+                );
+                res.status(httpStatus.OK).json(order);
+            } else {
+                return res
+                    .status(httpStatus.BAD_REQUEST)
+                    .json({ message: "Status has not been changed" });
+            }
+        } catch (err) {
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
         }
     },
     reviewOrder: async (req, res) => {
-        const { orderNumber } = req.params;
+        try {
+            const {orderNumber} = req.params;
 
-        const { review, comment } = req.body;
-        const userId = req.user?.user_id ?? null;
+            const {review, comment} = req.body;
+            const userId = req.user?.user_id ?? null;
 
-        const orderExist = await OrderModel.findOne({
-            orderNumber,
-        });
-        if (!orderExist) {
-            return res.status(httpStatus.NOT_FOUND).json({ message: "Order not found" });
-        }
-        if (orderExist.uid !== userId) {
-            return res.status(httpStatus.FORBIDDEN).json({
-                message: "You do not have the permission to rate this order",
+            const orderExist = await OrderModel.findOne({
+                orderNumber,
             });
-        }
-        const order = await OrderModel.findOneAndUpdate(
-            { orderNumber },
-            {
-                review: review,
-                comment: comment,
+            if (!orderExist) {
+                return res.status(httpStatus.NOT_FOUND).json({message: "Order not found"});
             }
-        );
-        res.status(httpStatus.OK).json(order);
+            if (orderExist.uid !== userId) {
+                return res.status(httpStatus.FORBIDDEN).json({
+                    message: "You do not have the permission to rate this order",
+                });
+            }
+            const order = await OrderModel.findOneAndUpdate(
+                {orderNumber},
+                {
+                    review: review,
+                    comment: comment,
+                }
+            );
+            res.status(httpStatus.OK).json(order);
+        } catch (err) {
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: "Server error" });
+        }
     },
 };
 
