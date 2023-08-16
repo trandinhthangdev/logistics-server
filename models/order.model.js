@@ -1,13 +1,14 @@
-const { customAlphabet } = require('nanoid');
+const { customAlphabet } = require("nanoid");
 const mongoose = require("mongoose");
-const {OrderStatusEnum} = require("../utils/constants");
+const { OrderStatusEnum } = require("../utils/constants");
 
 const { Schema } = mongoose;
 
 // Function to generate a random string of length 10
-const generateRandomString = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 10);
-
-
+const generateRandomString = customAlphabet(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+    10
+);
 
 const orderSchema = new Schema(
     {
@@ -35,16 +36,20 @@ const orderSchema = new Schema(
             enum: Object.values(OrderStatusEnum),
             default: OrderStatusEnum.PENDING,
         },
+        review: { type: Number },
+        comment: { type: String },
     },
     { timestamps: true } // This will automatically add createdAt and updatedAt fields
 );
 // Pre-save hook to generate orderNumber before saving a new order
-orderSchema.pre('save', async function (next) {
+orderSchema.pre("save", async function (next) {
     if (!this.orderNumber) {
         let isUnique = false;
         while (!isUnique) {
             const potentialOrderNumber = generateRandomString();
-            const existingOrder = await mongoose.model('Order').findOne({ orderNumber: potentialOrderNumber });
+            const existingOrder = await mongoose
+                .model("Order")
+                .findOne({ orderNumber: potentialOrderNumber });
             if (!existingOrder) {
                 this.orderNumber = potentialOrderNumber;
                 isUnique = true;
@@ -54,18 +59,18 @@ orderSchema.pre('save', async function (next) {
     next();
 });
 orderSchema.index({
-    senderName: 'text',
-    senderPhone: 'text',
-    senderAddressProvince: 'text',
-    senderAddressDistrict: 'text',
-    senderAddressWard: 'text',
-    senderAddressDescription: 'text',
-    recipientName: 'text',
-    recipientPhone: 'text',
-    recipientAddressProvince: 'text',
-    recipientAddressDistrict: 'text',
-    recipientAddressWard: 'text',
-    recipientAddressDescription: 'text',
+    senderName: "text",
+    senderPhone: "text",
+    senderAddressProvince: "text",
+    senderAddressDistrict: "text",
+    senderAddressWard: "text",
+    senderAddressDescription: "text",
+    recipientName: "text",
+    recipientPhone: "text",
+    recipientAddressProvince: "text",
+    recipientAddressDistrict: "text",
+    recipientAddressWard: "text",
+    recipientAddressDescription: "text",
     // ... Add other fields you want to search
 });
 

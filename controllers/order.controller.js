@@ -11,7 +11,10 @@ const OrderController = {
                 limit = 10,
                 search = "",
                 status = undefined,
+                review = undefined
             } = req.query;
+            console.log('review', review)
+
             const userId = req.user?.user_id ?? null;
             const isAdmin = !!req.user?.email;
             const query = {
@@ -21,7 +24,8 @@ const OrderController = {
                           $text: { $search: search },
                       }
                     : {}),
-                ...(status ? { status: status } : {}),
+                ...(status ? { status: {$in: status.split(",")} } : {}),
+                ...(review ? { review: {$in: review.split(",").map(item => item == 0 ? "" : item)} } : {}),
             };
             const orders = await OrderModel.find(query)
                 .skip((parseInt(page) - 1) * parseInt(limit))
@@ -166,6 +170,32 @@ const OrderController = {
                 .status(400)
                 .json({ error: "Status has not been changed" });
         }
+    },
+    reviewOrder: async (req, res) => {
+        const { orderNumber } = req.params;
+
+        const { review, comment } = req.body;
+        const userId = req.user?.user_id ?? null;
+
+        const orderExist = await OrderModel.findOne({
+            orderNumber,
+        });
+        if (!orderExist) {
+            return res.status(httpStatus.NOT_FOUND).json({ message: "Order not found" });
+        }
+        if (orderExist.uid !== userId) {
+            return res.status(httpStatus.FORBIDDEN).json({
+                message: "You do not have the permission to rate this order",
+            });
+        }
+        const order = await OrderModel.findOneAndUpdate(
+            { orderNumber },
+            {
+                review: review,
+                comment: comment,
+            }
+        );
+        res.status(httpStatus.OK).json(order);
     },
 };
 

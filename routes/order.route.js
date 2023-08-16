@@ -14,13 +14,19 @@ router.post("/", authMiddleware(), asyncWrapper(OrderController.createOrder));
 // Add other routes for updating and deleting orders
 router.get(
     "/:orderNumber",
-    authMiddleware(),
+    // authMiddleware(),
     asyncWrapper(OrderController.getOrder)
 );
 router.post(
     "/change-status/:orderNumber",
     authMiddleware(),
     asyncWrapper(OrderController.changeOrderStatus)
+);
+
+router.post(
+    "/review/:orderNumber",
+    authMiddleware(),
+    asyncWrapper(OrderController.reviewOrder)
 );
 
 module.exports = router;
