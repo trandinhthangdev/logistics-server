@@ -11,6 +11,21 @@ router.get("/", authMiddleware(), asyncWrapper(OrderController.getAllOrders));
 // Create a new order
 router.post("/", authMiddleware(), asyncWrapper(OrderController.createOrder));
 
+// Update info a order 
+router.put(
+    "/:orderNumber",
+    authMiddleware(),
+    asyncWrapper(OrderController.updateOrder)
+);
+
+// Delete a order 
+router.delete(
+    "/:orderNumber",
+    authMiddleware(),
+    asyncWrapper(OrderController.deleteOrder)
+);
+
+
 // Add other routes for updating and deleting orders
 router.get(
     "/:orderNumber",
